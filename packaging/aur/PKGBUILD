@@ -1,0 +1,62 @@
+# Maintainer: benjaminjamesxyz <benjaminjamesxyz@users.noreply.github.com>
+# Contributor: cityji (upstream driver: honor-magickbookpro-fingerprint-driver)
+#
+# Fingerprint support on Linux for the FPC 10a5:a900 match-on-host sensor
+# found in HONOR MagicBook X14 Pro / Art 14 (and the 10a5:9800 sibling).
+#
+# No distro libfprint supports this sensor. This package builds libfprint
+# v1.94.6 + fpcmoh (merge request 396) + the upstream patches/, and points
+# ONLY fprintd at it via a systemd drop-in. The distro libfprint stays in
+# place and untouched; removal is `pacman -R fpc-a900-fingerprint-driver`.
+#
+# The proprietary host-side matcher libfpcbep.so cannot be redistributed and
+# is fetched at BUILD time from Lenovo's public driver download, md5-checked
+# (see get-blob.sh, docs/DEVICE.md). Network access is required during build.
+
+pkgname=fpc-a900-fingerprint-driver
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Fingerprint support for FPC 10a5:a900 (HONOR MagicBook): patched libfprint wired into fprintd'
+arch=('x86_64')
+url='https://github.com/cityji/honor-magickbookpro-fingerprint-driver'
+license=('LGPL-2.1-or-later')
+depends=('fprintd' 'glib2' 'libgusb' 'nss' 'libusb' 'pixman' 'libgudev'
+         'json-glib')
+makedepends=('git' 'curl' 'unzip' 'meson' 'ninja' 'gcc' 'pkgconf' 'python'
+             'binutils')
+install='fpc-a900.install'
+_commit=2fd7023cb06b6dcc41950efa09ad4c42ab71b4bd  # v1.0.0
+source=("git+https://github.com/cityji/honor-magickbookpro-fingerprint-driver#commit=$_commit"
+        '50-fpc-a900.rules'
+        '60-libfprint-2-device-fpc-a900.rules'
+        '10-fpc-a900.conf'
+        'fpc-a900.conf')
+sha256sums=('SKIP'
+            'af3bef3a59b979e3f67247917534d296251aac530b4557c465a5af2616728d70'
+            'd42ae52066cbf2a9193af46bae5d79c9675b1e1d930992afbad6b06e521b0d39'
+            '06d48a160e7dd1dd4d6c422e5d4434cd3894cc32d4f913dd827f9ca7dc1a634d'
+            '1633534e314147df86adf44e0248f1b825cdaa086e99fb85d78b5eea10ca8090')
+
+build() {
+  cd honor-magickbookpro-fingerprint-driver
+  ./get-blob.sh   # proprietary matcher, md5-verified, from Lenovo's public download
+  ./build.sh      # libfprint v1.94.6 + MR396 + patches/ -> dist/, self-checked
+}
+
+package() {
+  cd honor-magickbookpro-fingerprint-driver
+
+  install -d "$pkgdir/usr/lib/fpc-a900"
+  install -m644 dist/libfprint-2.so.2.0.0 "$pkgdir/usr/lib/fpc-a900/"
+  ln -s libfprint-2.so.2.0.0 "$pkgdir/usr/lib/fpc-a900/libfprint-2.so.2"
+  install -m644 blob/libfpcbep.so "$pkgdir/usr/lib/fpc-a900/"
+
+  install -Dm644 "$srcdir/60-libfprint-2-device-fpc-a900.rules" \
+    "$pkgdir/usr/lib/udev/rules.d/60-libfprint-2-device-fpc-a900.rules"
+  install -Dm644 "$srcdir/10-fpc-a900.conf" \
+    "$pkgdir/usr/lib/systemd/system/fprintd.service.d/10-fpc-a900.conf"
+  install -Dm644 "$srcdir/50-fpc-a900.rules" \
+    "$pkgdir/usr/share/polkit-1/rules.d/50-fpc-a900.rules"
+  install -Dm644 "$srcdir/fpc-a900.conf" \
+    "$pkgdir/usr/lib/tmpfiles.d/fpc-a900.conf"
+}

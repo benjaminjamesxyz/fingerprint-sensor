@@ -1,0 +1,15 @@
+post_install() {
+  systemd-tmpfiles --create fpc-a900.conf
+  udevadm control --reload-rules
+  udevadm trigger --subsystem-match=usb 2>/dev/null || true
+  systemctl daemon-reload
+  systemctl try-restart fprintd.service 2>/dev/null || true
+  echo "==> Enroll a finger:    fprintd-enroll"
+  echo "==> Verify (must print 'Verify result: verify-match'):  fprintd-verify"
+  echo "==> Login/sudo: add 'auth  sufficient  pam_fprintd.so' as the first"
+  echo "    auth line of /etc/pam.d/system-auth (password still works; no lockout)."
+}
+post_remove() {
+  udevadm control --reload-rules 2>/dev/null || true
+  systemctl daemon-reload 2>/dev/null || true
+}

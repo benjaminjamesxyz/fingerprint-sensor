@@ -1,0 +1,9 @@
+# makepkg build droppings
+packaging/aur/*.pkg.tar.zst
+packaging/aur/*.pkg.tar.zst.sig
+packaging/aur/src/
+packaging/aur/pkg/
+packaging/aur/honor-magickbookpro-fingerprint-driver/
+blob/
+dist/
+build/

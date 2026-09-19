@@ -1,0 +1,11 @@
+// Allow wheel users to manage local fingerprints (enroll, verify, list,
+// delete) without a desktop polkit agent. Scoped to local, active sessions.
+// Password login is unaffected: this grants nothing to PAM.
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("net.reactivated.fprint.device.") !== 0)
+        return;
+    if (!subject.local || !subject.active)
+        return;
+    if (subject.isInGroup("wheel"))
+        return polkit.Result.YES;
+});

@@ -1,0 +1,4 @@
+# FPC 10a5:a900 (HONOR MagicBook) - handled by the fpcmoh driver in the
+# libfprint shipped in /usr/lib/fpc-a900 (package fpc-a900-fingerprint-driver).
+SUBSYSTEM=="usb", ATTRS{idVendor}=="10a5", ATTRS{idProduct}=="a900", ATTRS{dev}=="*", TEST=="power/control", ATTR{power/control}="auto"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="10a5", ATTRS{idProduct}=="a900", ENV{LIBFPRINT_DRIVER}="FPC MOH Fingerprint Sensor"

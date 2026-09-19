@@ -1,0 +1,37 @@
+pkgbase = fpc-a900-fingerprint-driver
+	pkgdesc = Fingerprint support for FPC 10a5:a900 (HONOR MagicBook): patched libfprint wired into fprintd
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/cityji/honor-magickbookpro-fingerprint-driver
+	install = fpc-a900.install
+	arch = x86_64
+	license = LGPL-2.1-or-later
+	makedepends = git
+	makedepends = curl
+	makedepends = unzip
+	makedepends = meson
+	makedepends = ninja
+	makedepends = gcc
+	makedepends = pkgconf
+	makedepends = python
+	makedepends = binutils
+	depends = fprintd
+	depends = glib2
+	depends = libgusb
+	depends = nss
+	depends = libusb
+	depends = pixman
+	depends = libgudev
+	depends = json-glib
+	source = git+https://github.com/cityji/honor-magickbookpro-fingerprint-driver#commit=2fd7023cb06b6dcc41950efa09ad4c42ab71b4bd
+	source = 50-fpc-a900.rules
+	source = 60-libfprint-2-device-fpc-a900.rules
+	source = 10-fpc-a900.conf
+	source = fpc-a900.conf
+	sha256sums = SKIP
+	sha256sums = af3bef3a59b979e3f67247917534d296251aac530b4557c465a5af2616728d70
+	sha256sums = d42ae52066cbf2a9193af46bae5d79c9675b1e1d930992afbad6b06e521b0d39
+	sha256sums = 06d48a160e7dd1dd4d6c422e5d4434cd3894cc32d4f913dd827f9ca7dc1a634d
+	sha256sums = 1633534e314147df86adf44e0248f1b825cdaa086e99fb85d78b5eea10ca8090
+
+pkgname = fpc-a900-fingerprint-driver
