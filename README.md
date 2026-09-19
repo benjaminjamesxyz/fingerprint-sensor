@@ -110,6 +110,18 @@ fprintd-verify
 this sensor's history, enrollment reported success while the matcher rejected
 every image — so trust the verify, not the enroll.
 
+### More than one finger
+
+```bash
+fprintd-enroll -f right-thumb
+fprintd-enroll -f left-index-finger
+```
+
+Names: `left`/`right` × `thumb`, `index-finger`, `middle-finger`,
+`ring-finger`, `little-finger`. Two or three is plenty — every PAM consumer
+(sudo, login, lock screen) matches **any** enrolled print automatically;
+nothing to configure per finger. `fprintd-list $USER` shows what is enrolled.
+
 ## 6. Fingerprint login, sudo, lock screen
 
 Add `pam_fprintd` as a **sufficient** auth method — fingerprint first,
@@ -142,6 +154,31 @@ local, active sessions to enroll/verify/list/delete prints without a prompt.
 It grants nothing beyond fingerprint management and does not touch PAM. On
 other distros, install the same file from `polkit/` into
 `/etc/polkit-1/rules.d/`.
+
+### Example: hyprlock
+
+```bash
+sudo sed -i '1i auth        sufficient    pam_fprintd.so timeout=20' /etc/pam.d/hyprlock
+```
+
+Behaviour, verified on v0.9.6: the sensor arms the moment the lock screen
+appears — touch unlocks instantly. Typing your password and pressing
+**Enter** abandons the fingerprint wait and authenticates against the
+password instead. `timeout=20` widens the default 10-second window; add
+`max-tries=3` if you want more sensor attempts per unlock. The same one-line
+pattern works for any other locker — prepend it to that locker's file in
+`/etc/pam.d/`.
+
+Test before trusting it: run `hyprlock` from a terminal first (fingerprint
+unlock, then password path), with `Ctrl+Alt+F2` → `pkill hyprlock` as the
+escape hatch.
+
+### Will a system update break it?
+
+No. The patched library lives in `/usr/lib/fpc-a900/` and is reached only
+through the fprintd drop-in; `pacman -Syu` updating the stock `libfprint`
+does not touch it. Only the package itself (or upstream tag bumps, which we
+track in the AUR package) changes what fprintd loads.
 
 ## 7. Troubleshooting
 
