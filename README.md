@@ -16,6 +16,22 @@ protocol teardown ([docs/INVESTIGATION.md](docs/INVESTIGATION.md)).
 
 ---
 
+## Find it fast
+
+| I want to… | Go to |
+|---|---|
+| check it works on my laptop | [§1 Is this for your laptop?](#1-is-this-for-your-laptop) |
+| understand what gets installed | [§2 What this actually does](#2-what-this-actually-does-30-second-version) |
+| install on Arch | [§3 Install — Arch Linux](#3-install--arch-linux-package) |
+| install on Ubuntu / Fedora / openSUSE | [§4 Install — other distros](#4-install--other-distros-upstream-bootstrap) |
+| enroll a finger (or several) | [§5 Enroll your finger](#5-enroll-your-finger) · [More than one](#more-than-one-finger) |
+| unlock login / sudo / lock screen | [§6 Fingerprint login, sudo, lock screen](#6-fingerprint-login-sudo-lock-screen) |
+| set up hyprlock | [Example: hyprlock](#example-hyprlock) |
+| fix something that broke | [§7 Troubleshooting](#7-troubleshooting) |
+| remove everything | [§8 Uninstall](#8-uninstall) |
+| know if updates break it | [Will a system update break it?](#will-a-system-update-break-it) |
+| read how the sensor was reverse-engineered | [docs/INVESTIGATION.md](docs/INVESTIGATION.md) |
+
 ## 1. Is this for your laptop?
 
 ```bash
