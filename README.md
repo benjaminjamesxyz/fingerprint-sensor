@@ -204,6 +204,7 @@ track in the AUR package) changes what fprintd loads.
 | `NoEnrolledFingers` on verify | Enrollment was interrupted (no partial saves), or you enrolled with sudo (prints stored under root). Re-enroll as your user, see it through. |
 | Enroll works, verify never matches | You are not running the patched library. Check `grep fpc-a900 /proc/$(pidof fprintd)/maps` — must show `/usr/lib/fpc-a900` (or `/opt/fpc-a900` for the bootstrap install). |
 | Sensor "disappears" or resets after a capture | The unpatched-driver behaviour (firmware watchdog reset). The `patches/0006` fix reads the image completely; make sure the patched build is loaded. |
+| Fingerprint dead after every wake from sleep | Fixed by `patches/0011` (package ≥ 1.0.0-3): the driver double-reported resume, tripping libfprint's `suspend_resume_task` assertion and killing the first post-wake attempt. A `system-sleep` hook also restarts fprintd on wake as a safety net. If a touch does nothing after a long lock, press **Enter** first — it re-arms the fingerprint wait (`timeout=` on the PAM line). |
 | `fprintd` fails to start after installing | Prebuilt-library ABI mismatch — build from source instead (§4). Upstream documents this in its README. |
 | Password login broke after PAM edit | Should not happen with `sufficient` (§6). If it did: boot with a live USB, remove the `pam_fprintd` line you added from `/etc/pam.d/system-auth`. |
 
