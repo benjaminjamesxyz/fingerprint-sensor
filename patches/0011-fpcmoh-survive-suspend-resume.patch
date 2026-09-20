@@ -1,0 +1,109 @@
+diff --git a/libfprint/drivers/fpcmoh/fpc.c b/libfprint/drivers/fpcmoh/fpc.c
+index 2eb86c5..0399f93 100644
+--- a/libfprint/drivers/fpcmoh/fpc.c
++++ b/libfprint/drivers/fpcmoh/fpc.c
+@@ -2375,6 +2375,7 @@ fpc_dev_suspend (FpDevice *device)
+ {
+   FpiDeviceFpcMoh *self = FPI_DEVICE_FPCMOH (device);
+   FpiDeviceAction action = fpi_device_get_current_action (device);
++  gboolean wait4finger = FALSE;
+ 
+   fp_dbg ("%s: action %u", G_STRFUNC, action);
+ 
+@@ -2384,8 +2385,24 @@ fpc_dev_suspend (FpDevice *device)
+       return;
+     }
+ 
+-  g_assert ((self->enroll_ssm && FP_ENROLL_WAIT4FINGERDOWN == fpi_ssm_get_cur_state (self->enroll_ssm)) ||
+-            (self->identify_ssm && FP_VERIFY_WAIT4FINGERDOWN == fpi_ssm_get_cur_state (self->identify_ssm)));
++  /* Only a device parked in WAIT4FINGERDOWN can be quiesced cleanly with
++   * the arm-and-cancel dance below. Suspending mid-transaction would
++   * strand it, so report not-supported and let the running transfer hit
++   * its timeout during sleep; resume() then finds nothing to re-arm.
++   * The old g_assert() here took the whole daemon down. */
++  if (self->enroll_ssm &&
++      FP_ENROLL_WAIT4FINGERDOWN == fpi_ssm_get_cur_state (self->enroll_ssm))
++    wait4finger = TRUE;
++  else if (self->identify_ssm &&
++           FP_VERIFY_WAIT4FINGERDOWN == fpi_ssm_get_cur_state (self->identify_ssm))
++    wait4finger = TRUE;
++
++  if (!wait4finger)
++    {
++      fp_warn ("%s: not in WAIT4FINGERDOWN, cannot suspend cleanly", G_STRFUNC);
++      fpi_device_suspend_complete (device, fpi_device_error_new (FP_DEVICE_ERROR_NOT_SUPPORTED));
++      return;
++    }
+ 
+   self->cmd_suspended = TRUE;
+   fp_dbg ("%s suspend %u", G_STRFUNC, self->cmd_suspended);
+@@ -2400,28 +2417,53 @@ fpc_dev_resume (FpDevice *device)
+ {
+   FpiDeviceFpcMoh *self = FPI_DEVICE_FPCMOH (device);
+   FpiDeviceAction action = fpi_device_get_current_action (device);
+-
+-  fp_dbg ("%s enter -->", G_STRFUNC);
+-
+-  if (action != FPI_DEVICE_ACTION_VERIFY && action != FPI_DEVICE_ACTION_IDENTIFY && action != FPI_DEVICE_ACTION_ENROLL)
+-    {
+-      g_assert_not_reached ();
+-      fpi_device_resume_complete (device, fpi_device_error_new (FP_DEVICE_ERROR_NOT_SUPPORTED));
++  gboolean suspended_ssm = FALSE;
++
++  fp_dbg ("%s enter -->, action %u", G_STRFUNC, action);
++
++  /* fprintd resumes every open device on wake, including devices that had
++   * nothing suspended -- an idle daemon races this constantly. The old
++   * g_assert_not_reached() here took the whole daemon down; the core only
++   * needs the resume task completed. */
++  if (!self->cmd_suspended ||
++      (action != FPI_DEVICE_ACTION_VERIFY &&
++       action != FPI_DEVICE_ACTION_IDENTIFY &&
++       action != FPI_DEVICE_ACTION_ENROLL))
++    {
++      fp_warn ("%s: resume with nothing suspended (action %u)", G_STRFUNC, action);
++      self->cmd_suspended = FALSE;
++      fpi_device_resume_complete (device, NULL);
+       return;
+     }
+ 
+-  g_assert (self->cmd_suspended);
+-  g_assert ((self->enroll_ssm && FP_ENROLL_SUSPENDED == fpi_ssm_get_cur_state (self->enroll_ssm)) ||
+-            (self->identify_ssm && FP_VERIFY_SUSPENDED == fpi_ssm_get_cur_state (self->identify_ssm)));
+-
+   self->cmd_suspended = FALSE;
+ 
+-  if (self->enroll_ssm)
+-    fpi_ssm_jump_to_state (self->enroll_ssm, FP_ENROLL_RESUME);
+-  else if (self->identify_ssm)
+-    fpi_ssm_jump_to_state (self->identify_ssm, FP_VERIFY_RESUME);
++  if (self->enroll_ssm &&
++      FP_ENROLL_SUSPENDED == fpi_ssm_get_cur_state (self->enroll_ssm))
++    suspended_ssm = TRUE;
++  else if (self->identify_ssm &&
++           FP_VERIFY_SUSPENDED == fpi_ssm_get_cur_state (self->identify_ssm))
++    suspended_ssm = TRUE;
++
++  if (suspended_ssm)
++    {
++      /* Re-arm the operation. The INDICATE_S_STATE (S0) transfer of the
++       * RESUME state reports to the core exactly once, when it completes.
++       * Reporting here as well double-fires fpi_device_resume_complete
++       * and trips libfprint's suspend_resume_task assertion on every
++       * wake. */
++      if (self->enroll_ssm)
++        fpi_ssm_jump_to_state (self->enroll_ssm, FP_ENROLL_RESUME);
++      else
++        fpi_ssm_jump_to_state (self->identify_ssm, FP_VERIFY_RESUME);
++    }
++  else
++    {
++      /* The operation ended while the machine slept. Nothing to re-arm. */
++      fp_dbg ("%s: operation gone after suspend", G_STRFUNC);
++      fpi_device_resume_complete (device, NULL);
++    }
+ 
+-  fpi_device_resume_complete (device, NULL);
+   fp_dbg ("%s exit <--", G_STRFUNC);
+ }
+ 
