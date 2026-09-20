@@ -1,7 +1,7 @@
 pkgbase = fpc-a900-fingerprint-driver
 	pkgdesc = Fingerprint support for FPC 10a5:a900 (HONOR MagicBook): patched libfprint wired into fprintd
 	pkgver = 1.0.0
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/cityji/honor-magickbookpro-fingerprint-driver
 	install = fpc-a900.install
 	arch = x86_64
@@ -23,7 +23,7 @@ pkgbase = fpc-a900-fingerprint-driver
 	depends = pixman
 	depends = libgudev
 	depends = json-glib
-	source = git+https://github.com/cityji/honor-magickbookpro-fingerprint-driver#commit=2fd7023cb06b6dcc41950efa09ad4c42ab71b4bd
+	source = git+https://github.com/benjaminjamesxyz/fingerprint-sensor#commit=c035cd586d4d8618414a07cacf2065ebeccc33e6
 	source = 50-fpc-a900.rules
 	source = 60-libfprint-2-device-fpc-a900.rules
 	source = 10-fpc-a900.conf
