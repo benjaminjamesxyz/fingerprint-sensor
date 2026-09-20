@@ -184,20 +184,23 @@ password instead. The same one-line
 pattern works for any other locker — prepend it to that locker's file in
 `/etc/pam.d/`.
 
-**Overnight-style locks:** the wait only lives as long as `timeout=`. The
+**Overnight-style locks:** the wait only lives as long as `timeout=` — the
 default ~10 s (and our earlier `timeout=20`) is why a touch after a few
-hours does nothing — the sensor was never asked. For a lock that should
-answer your finger all day:
+hours does nothing: the sensor was never asked. `pam_fprintd` treats a
+**negative timeout as infinite** (verified in its source), which is the
+right shape for a personal laptop's lock screen:
 
 ```bash
-auth        sufficient    pam_fprintd.so timeout=86400 max-tries=3
+auth        sufficient    pam_fprintd.so timeout=-1 max-tries=-1
 ```
 
-The armed wait is the sensor's own finger-detect interrupt (near-zero
-power), and suspend/resume of an armed wait is handled cleanly by
-`patches/0011` — lock, sleep, wake, touch, unlocked. `max-tries=3` closes
-the wait after three wrong-finger touches; **Enter** always falls through
-to the password, which nothing here can lock out.
+Lock, sleep, wake next week, touch, unlocked. Wrong finger → "no match"
+and the wait re-arms itself; **Enter** always falls through to the
+password, which nothing here can lock out. The armed wait is the sensor's
+own finger-detect interrupt (near-zero power), and suspending an armed
+wait is handled cleanly by `patches/0011`. Prefer a bounded window?
+`timeout=86400 max-tries=3` closes the wait after a day or three wrong
+touches — same mechanics, shorter fuse.
 
 Test before trusting it: run `hyprlock` from a terminal first (fingerprint
 unlock, then password path), with `Ctrl+Alt+F2` → `pkill hyprlock` as the
