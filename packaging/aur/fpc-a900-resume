@@ -1,0 +1,13 @@
+#!/bin/bash
+# Restart fprintd after system resume. Ships with fpc-a900-fingerprint-driver.
+#
+# The fpcmoh driver (FPC 10a5:a900 / 10a5:9800) loses its device state across
+# suspend: on wake, libfprint trips
+#   fpi_device_resume_complete: assertion 'priv->suspend_resume_task' failed
+# and the first fingerprint attempt after resume fails. Restarting the daemon
+# re-initialises the sensor cleanly. Harmless when fprintd is not running
+# (it is dbus-activated and idles out on its own).
+if [ "$1" = post ]; then
+    /usr/bin/systemctl try-restart fprintd.service
+fi
+exit 0

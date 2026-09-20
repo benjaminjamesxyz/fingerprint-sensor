@@ -15,7 +15,7 @@
 
 pkgname=fpc-a900-fingerprint-driver
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Fingerprint support for FPC 10a5:a900 (HONOR MagicBook): patched libfprint wired into fprintd'
 arch=('x86_64')
 url='https://github.com/cityji/honor-magickbookpro-fingerprint-driver'
@@ -30,12 +30,14 @@ source=("git+https://github.com/cityji/honor-magickbookpro-fingerprint-driver#co
         '50-fpc-a900.rules'
         '60-libfprint-2-device-fpc-a900.rules'
         '10-fpc-a900.conf'
-        'fpc-a900.conf')
+        'fpc-a900.conf'
+        'fpc-a900-resume')
 sha256sums=('SKIP'
             'af3bef3a59b979e3f67247917534d296251aac530b4557c465a5af2616728d70'
             'd42ae52066cbf2a9193af46bae5d79c9675b1e1d930992afbad6b06e521b0d39'
             '06d48a160e7dd1dd4d6c422e5d4434cd3894cc32d4f913dd827f9ca7dc1a634d'
-            '1633534e314147df86adf44e0248f1b825cdaa086e99fb85d78b5eea10ca8090')
+            '1633534e314147df86adf44e0248f1b825cdaa086e99fb85d78b5eea10ca8090'
+            '7655430671e0529d03554ccda8f7e41a29d74458b4fd9b230bbe9f58daf19f96')
 
 build() {
   cd honor-magickbookpro-fingerprint-driver
@@ -59,4 +61,6 @@ package() {
     "$pkgdir/usr/share/polkit-1/rules.d/50-fpc-a900.rules"
   install -Dm644 "$srcdir/fpc-a900.conf" \
     "$pkgdir/usr/lib/tmpfiles.d/fpc-a900.conf"
+  install -Dm755 "$srcdir/fpc-a900-resume" \
+    "$pkgdir/usr/lib/systemd/system-sleep/fpc-a900-resume"
 }
