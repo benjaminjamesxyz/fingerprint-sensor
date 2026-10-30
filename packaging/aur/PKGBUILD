@@ -23,7 +23,7 @@ license=('LGPL-2.1-or-later')
 depends=('fprintd' 'glib2' 'libgusb' 'nss' 'libusb' 'pixman' 'libgudev'
          'json-glib')
 makedepends=('git' 'curl' 'unzip' 'meson' 'ninja' 'gcc' 'pkgconf' 'python'
-             'binutils')
+             'binutils' 'glib2-devel')
 install='fpc-a900.install'
 _commit=c035cd586d4d8618414a07cacf2065ebeccc33e6  # v1.0.0 + suspend/resume fix (0011)
 source=("git+https://github.com/benjaminjamesxyz/fingerprint-sensor#commit=$_commit"
@@ -40,13 +40,13 @@ sha256sums=('SKIP'
             '7655430671e0529d03554ccda8f7e41a29d74458b4fd9b230bbe9f58daf19f96')
 
 build() {
-  cd honor-magickbookpro-fingerprint-driver
+  cd fingerprint-sensor
   ./get-blob.sh   # proprietary matcher, md5-verified, from Lenovo's public download
   ./build.sh      # libfprint v1.94.6 + MR396 + patches/ -> dist/, self-checked
 }
 
 package() {
-  cd honor-magickbookpro-fingerprint-driver
+  cd fingerprint-sensor
 
   install -d "$pkgdir/usr/lib/fpc-a900"
   install -m644 dist/libfprint-2.so.2.0.0 "$pkgdir/usr/lib/fpc-a900/"
